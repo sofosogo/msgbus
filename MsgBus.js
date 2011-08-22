@@ -3,18 +3,17 @@
 function Constructor( prefix ){
     set[ this.prefix || "" ] = this;
     this.prefix = prefix ? prefix + "." : "";
-    
 };
 Constructor.prototype = {
     listen: function( msg, method, opt ){
         var sgn = this.signal(msg);
-        if( typeof sgn !== "undefined" ){
+        if( sgn !== void 0 ){
             var _t = this;
             setTimeout( function(){ _t.fire(msg, sgn);}, 0 );
         }
         this.prefix && ( msg = this.prefix + msg );
-        var l = createListener( this, msg, method, opt || {} );
-        return getListeners(msg)[l.id] = l;
+        var ln = createListener( this, msg, method, opt || {} );
+        return getListeners(msg)[ln.id] = ln;
     },
     
     wait: function( msg, method, opt ){
@@ -24,34 +23,11 @@ Constructor.prototype = {
     },
     
     join: function( msgs, method, opt ){
-        var _t = this;
-        opt = opt || {};
-        if( !isArray(msgs) ) msgs = [msgs];
-        var data = {};
-        var handler = createNotifier( method, opt.thisp );
-        for( var i = 0; i < msgs.length; i++ ){
-            this.listen( msgs[i], (function(){
-                var key = msgs[i];
-                return function(val){
-                    data[key] = val;
-                    for( var j = 0; j < msgs.length; j++ ){
-                        if( data[msgs[j]] === void 0 ) return;
-                    }
-                    handler( data );
-                };
-            })(), opt );
-        }
-    },
-    
-    unListen: function( id, msg ){
-        if( msg ) return delete listeners[msg][id];
-        for( var k in listeners ){
-            delete listeners[k][id];
-        }
+        return new Joiner( this, msgs, method, opt );
     },
     
     fire: function( msg, data, opt ){
-        var async = opt && typeof opt.async !== "undefined" ? opt.async : this.opt("async");
+        var async = opt && opt.async !== void 0 ? opt.async : this.opt("async");
         this.prefix && ( msg = this.prefix + msg );
         if( !async ) fire( msg, data );
         else setTimeout( function(){fire(msg, data);}, 0 );
@@ -59,14 +35,12 @@ Constructor.prototype = {
     
     signal: function( msg, data, opt ){
         var msgWithPrefix = this.prefix ? this.prefix + msg : msg;
-        return typeof data !== "undefined" ? this.fire(msg, signals[msgWithPrefix]=data, opt) : signals[msgWithPrefix];
+        return data !== void 0 ? this.fire(msg, signals[msgWithPrefix]=data, opt) : signals[msgWithPrefix];
     },
     
     opt: function( key, value ){
-        return typeof value !== "undefined" ? (opt[key] = value) : opt[key];
+        return value !== void 0 ? (opt[key] = value) : opt[key];
     },
-    
-    reset: reset,
     
     getInstance: function( prefix ){
         if( set[prefix||""] ) return set[prefix||""];
@@ -90,41 +64,32 @@ function getListeners( msg ){
 }
 
 function createListener( msgbus, msg, method, opt ){
-    var l = { id: id++, msg: msg, opt: opt };
-    l._notify = createNotifier( method, opt.thisp );
-    for( var k in listener_prototype ){
-        l[k] = listener_prototype[k];
-    }
+    var ln = new Listener( msg, method, opt );
     if( typeof opt.enable === "string" ){
         msgbus.listen( opt.enable, function( bool ){
-            bool ? l.enable() : l.disable();
+            bool ? ln.enable() : ln.disable();
         });
     }
-    return l;
-}
-    
-function createNotifier( method, obj ){
-    if( typeof method === "string" && obj ){
-        return function( data ){ obj[method]( data ) };
-    }else if( typeof method === "function" && obj ){
-         return function( data ){ method.call( obj, data ); };
-    }else if( typeof method === "function" ){
-        return function( data ){ method( data ); };
-    }
-    return function(){};
+    return ln;
 }
 
-var listener_prototype = {
+function Listener( msg, method, opt ){
+    this.id = id++;
+    this.msg = msg;
+    this.opt = opt;
+    this.notify = createNotifier( method, opt.thisp );
+}
+Listener.prototype = {
     handle: function( data ){
         if( this.enabled === false ){
-            this._delay = function(){ this._notify( data ) };
+            this._delay = function(){ this.notify( data ) };
         }else{
-            this._notify( data );
+            this.notify( data );
         }
         if( this.opt.once ) this.remove();
     },
     remove: function(){
-        MsgBus.unListen( this.id, this.msg );
+        delete getListeners(this.msg)[this.id];
     },
     disable: function(){
         this.enabled = false;
@@ -138,6 +103,57 @@ var listener_prototype = {
     }
 }
 
+function Joiner( msgbus, msgs, method, opt ){
+    opt = opt || {};
+    this.data = {};
+    this.listener = {};
+    var notifier = createNotifier( method, opt.thisp ),
+        _t = this, ln;
+    
+    this.handler = function( data ){
+        for( var j = 0; j < msgs.length; j++ ){
+            if( data[msgs[j]] === void 0 ) return;
+        }
+        notifier( data );
+        if( opt.clean_after_fire ) data = {};
+    }
+    
+    for( var i = 0; i < msgs.length; i++ ){
+        ln = msgbus.listen( msgs[i], (function(){
+            var key = msgs[i];
+            return function(val){
+                _t.put( key, val );
+            };
+        })());
+        _t.listener[ln.id] = ln;
+    }
+}
+Joiner.prototype = {
+    put: function( k, v ){
+        this.data[k] = v;
+        this.handler( this.data );
+    },
+    clean: function(){
+        this.data = {};
+    },
+    remove: function(){
+        for( var i in this.listener ){
+            this.listener[i].remove();
+        }
+    }
+}
+
+function createNotifier( method, obj ){
+    if( typeof method === "string" && obj ){
+        return function( data ){ obj[method]( data ) };
+    }else if( typeof method === "function" && obj ){
+        return function( data ){ method.call( obj, data ); };
+    }else if( typeof method === "function" ){
+        return function( data ){ method( data ); };
+    }
+    throw TypeError("Cannot create a listener.");
+}
+
 function fire( msg, data ){
     var lns = getListeners(msg), now = new Date(), ln;
     for( var i in lns ){
@@ -149,7 +165,6 @@ function fire( msg, data ){
         try{
             ln.handle(data);
         }catch( e ){
-            console.log("Error!");
         }
     }
 }
