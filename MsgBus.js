@@ -48,16 +48,11 @@ Constructor.prototype = {
     }
 };
 
-var id, listeners, signals, opt, set = {};
-reset();
-
-function reset(){
-    id = 0;
-    listeners = {};
-    signals = {};
-    opt = { async: false };
-    return this;
-}
+var id = 0, 
+    listeners = {}, 
+    signals = {}, 
+    opt = { async: false }, 
+    set = {};
     
 function getListeners( msg ){
     return listeners[msg] || ( listeners[msg] = {} );
@@ -169,9 +164,6 @@ function fire( msg, data ){
     }
 }
 
-var MsgBus = window.MsgBus = new Constructor();
-function isArray( obj ){
-    return Object.prototype.toString.call(obj) === "[object Array]";
-}
+window.MsgBus = new Constructor();
 
 })();
