@@ -1,10 +1,10 @@
 (function(){
 
-function Constructor( prefix ){
+function MsgBus( prefix ){
     set[ this.prefix || "" ] = this;
     this.prefix = prefix ? prefix + "." : "";
 };
-Constructor.prototype = {
+MsgBus.prototype = {
     listen: function( msg, method, opt ){
         var sgn = this.signal(msg);
         if( sgn !== void 0 ){
@@ -105,7 +105,7 @@ function Joiner( msgbus, msgs, method, opt ){
     var notifier = createNotifier( method, opt.thisp ),
         _t = this, ln;
     
-    this.handler = function( data ){
+    this.handle = function( data ){
         for( var j = 0; j < msgs.length; j++ ){
             if( data[msgs[j]] === void 0 ) return;
         }
@@ -126,7 +126,7 @@ function Joiner( msgbus, msgs, method, opt ){
 Joiner.prototype = {
     put: function( k, v ){
         this.data[k] = v;
-        this.handler( this.data );
+        this.handle( this.data );
     },
     clean: function(){
         this.data = {};
@@ -164,6 +164,6 @@ function fire( msg, data ){
     }
 }
 
-window.MsgBus = new Constructor();
+window.MsgBus = new MsgBus();
 
 })();
