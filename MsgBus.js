@@ -154,7 +154,7 @@ function fire( msg, data ){
     for( var i in lns ){
         ln = lns[i];
         if( ln.opt.min_interval ){
-            if( ln.lastCalled && (now - ln.lastCalled < ln.opt.min_interval) ) return;
+            if( ln.lastCalled && (now - ln.lastCalled < ln.opt.min_interval) ) continue;
             ln.lastCalled = now;
         }
         try{
