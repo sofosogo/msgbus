@@ -44,7 +44,7 @@ MsgBus.prototype = {
     
     getInstance: function( prefix ){
         if( set[prefix||""] ) return set[prefix||""];
-        return new Constructor( prefix );
+        return new MsgBus( prefix );
     }
 };
 
