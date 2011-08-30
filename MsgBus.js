@@ -23,7 +23,7 @@ MsgBus.prototype = {
     },
     
     join: function( msgs, method, opt ){
-        return new Joiner( this, msgs, method, opt );
+        return new Join( this, msgs, method, opt );
     },
     
     fire: function( msg, data, opt ){
@@ -98,7 +98,7 @@ Listener.prototype = {
     }
 }
 
-function Joiner( msgbus, msgs, method, opt ){
+function Join( msgbus, msgs, method, opt ){
     opt = opt || {};
     this.data = {};
     this.listener = {};
@@ -123,7 +123,7 @@ function Joiner( msgbus, msgs, method, opt ){
         _t.listener[ln.id] = ln;
     }
 }
-Joiner.prototype = {
+Join.prototype = {
     put: function( k, v ){
         this.data[k] = v;
         this.handle( this.data );
