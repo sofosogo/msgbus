@@ -32,7 +32,8 @@ API：
 @param key 字符串，必选。所关注的信号。  
 @param data 任意值，可选。如果data是undefined，将返回该信号，否则保存该信号并返回。此时用法和msgbus.fire相同。  
 @param opt  
-msgbus.getInstance( prefix )  
+
+**msgbus.getInstance( prefix )**  
 返回MsgBus的另一个实例。  
 @param prefix 字符串。  
 
