@@ -13,7 +13,7 @@ MsgBus.prototype = {
         }
         this.prefix && ( msg = this.prefix + msg );
         var ln = createListener( this, msg, method, opt || {} );
-        return getListeners(msg)[ln.id] = ln;
+        return getListeners(msg)[ln._id] = ln;
     },
     
     wait: function( msg, method, opt ){
@@ -69,22 +69,22 @@ function createListener( msgbus, msg, method, opt ){
 }
 
 function Listener( msg, method, opt ){
-    this.id = id++;
-    this.msg = msg;
-    this.opt = opt;
-    this.notify = createNotifier( method, opt.thisp );
+    this._id = id++;
+    this._msg = msg;
+    this._opt = opt;
+    this._notify = createNotifier( method, opt.thisp );
 }
 Listener.prototype = {
-    handle: function( data ){
+    _handle: function( data ){
         if( this.enabled === false ){
-            this._delay = function(){ this.notify( data ) };
+            this._delay = function(){ this._notify( data ) };
         }else{
-            this.notify( data );
+            this._notify( data );
         }
-        if( this.opt.once ) this.remove();
+        if( this._opt.once ) this.remove();
     },
     remove: function(){
-        delete getListeners(this.msg)[this.id];
+        delete getListeners(this._msg)[this._id];
     },
     disable: function(){
         this.enabled = false;
@@ -100,17 +100,17 @@ Listener.prototype = {
 
 function Join( msgbus, msgs, method, opt ){
     opt = opt || {};
-    this.data = {};
-    this.listener = {};
+    this._data = {};
+    this._listener = {};
     var notifier = createNotifier( method, opt.thisp ),
         _t = this, ln;
     
-    this.handle = function( data ){
+    this._handle = function(){
         for( var j = 0; j < msgs.length; j++ ){
-            if( data[msgs[j]] === void 0 ) return;
+            if( this._data[msgs[j]] === void 0 ) return;
         }
-        notifier( data );
-        if( opt.clean_after_fire ) data = {};
+        notifier( this._data );
+        if( opt.clean_after_fire ) this.clean();
     }
     
     for( var i = 0; i < msgs.length; i++ ){
@@ -120,20 +120,20 @@ function Join( msgbus, msgs, method, opt ){
                 _t.put( key, val );
             };
         })());
-        _t.listener[ln.id] = ln;
+        _t._listener[ln._id] = ln;
     }
 }
 Join.prototype = {
     put: function( k, v ){
-        this.data[k] = v;
-        this.handle( this.data );
+        this._data[k] = v;
+        this._handle();
     },
     clean: function(){
-        this.data = {};
+        this._data = {};
     },
     remove: function(){
-        for( var i in this.listener ){
-            this.listener[i].remove();
+        for( var i in this._listener ){
+            this._listener[i].remove();
         }
     }
 }
@@ -153,12 +153,12 @@ function fire( msg, data ){
     var lns = getListeners(msg), now = new Date(), ln;
     for( var i in lns ){
         ln = lns[i];
-        if( ln.opt.min_interval ){
-            if( ln.lastCalled && (now - ln.lastCalled < ln.opt.min_interval) ) continue;
-            ln.lastCalled = now;
+        if( ln._opt.min_interval ){
+            if( ln._lastCalled && (now - ln._lastCalled < ln._opt.min_interval) ) continue;
+            ln._lastCalled = now;
         }
         try{
-            ln.handle(data);
+            ln._handle( data );
         }catch( e ){
         }
     }
