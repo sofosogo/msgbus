@@ -1,5 +1,4 @@
 ﻿**﻿MsgBus名字源于Message Bus，意为消息总线。试图通过监听事件（MsgBus.listen）和触发事件（MsgBus.fire）将相关联的各个模块解耦。**  
-
 # API：  
 **MsgBus.listen( msg, method, opt )**  
 @param msg: 字符串，必选。 监听的消息。  
@@ -57,7 +56,8 @@
 启用该监听器。  
 
 **Join**  
-Join意为结合点，和UML中的join概念相同。  
+Join意为结合点，和UML中的join概念相同。同时监听多条消息或者数据支流（亦可手动获取数据并通过Join.put方法来完成一支数据），
+当所有的消息（数据）汇集完毕后，将会触发某种行为。  
 **Join.put( k, v )**  
 手动添加一支数据。  
 **Join.clean()**  
