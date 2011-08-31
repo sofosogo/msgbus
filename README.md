@@ -1,4 +1,4 @@
-**﻿MsgBus名字源于Message Bus，意为消息总线。试图通过监听事件（MsgBus.listen）和触发事件（MsgBus.fire）将相关联的各个模块解耦。**  
+﻿**﻿MsgBus名字源于Message Bus，意为消息总线。试图通过监听事件（MsgBus.listen）和触发事件（MsgBus.fire）将相关联的各个模块解耦。**  
 
 API：  
 **MsgBus.listen( msg, method, opt )**  
@@ -31,12 +31,15 @@ API：
 **MsgBus.signal( msg, data, opt )**  
 @param key 字符串，必选。所关注的信号。  
 @param data 任意值，可选。如果data是undefined，将返回该信号，否则保存该信号并返回。此时用法和msgbus.fire相同。  
-@param opt  
+@param opt  对象，可选。比如 {async: true}。  
+    async 布尔值，可选。如值为true，使用setTimeout延迟触发该事件。 
+ @return 如果参数只有msg，则返回该信号值，否则为undefined。  
 
 **MsgBus.getInstance( prefix )**   
 @param prefix 字符串。  
-@return MsgBus
-主要起到隔离不同类型的消息的作用，拥有不同prefix的MsgBus可以监听和触发相同名字的消息，而互不影响。
+@return MsgBus  
+主要起到隔离不同类型的消息的作用，拥有不同prefix的MsgBus可以监听和触发相同名字的消息，而互不影响。  
+*注意：MsgBus === MsgBus.getInstance()恒成立。*
 
 **MsgBus.opt( key, value )**  
 @param key 字符串，必选。全局属性。可选值async。  
