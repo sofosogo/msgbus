@@ -164,7 +164,11 @@ function fire( msg, data ){
     }
 }
 
-var root = typeof module !== 'undefined' && module.exports ? module : this;
-root.MsgBus = new MsgBus();
+var msgbus= new MsgBus();
+if( typeof module !== 'undefined' && module.exports ){
+    module.exports = msgbus;
+}else{
+    window.MsgBus = msgbus;
+}
 
 })();
