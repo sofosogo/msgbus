@@ -164,6 +164,7 @@ function fire( msg, data ){
     }
 }
 
-window.MsgBus = new MsgBus();
+var root = typeof module !== 'undefined' && module.exports ? module : this;
+root.MsgBus = new MsgBus();
 
 })();
