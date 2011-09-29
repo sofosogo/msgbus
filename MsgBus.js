@@ -1,8 +1,17 @@
+/*
+ * MsgBus 
+ *
+ * Licensed under the MIT:
+ * http://www.opensource.org/licenses/mit-license.php
+ *
+ * Copyright (c) 2011, sofosogo
+ */
+
 (function(){
 
 function MsgBus( prefix ){
-    set[ this.prefix || "" ] = this;
     this.prefix = prefix ? prefix + "." : "";
+    set[prefix||""] = this;
 };
 MsgBus.prototype = {
     listen: function( msg, method, opt ){
@@ -43,8 +52,7 @@ MsgBus.prototype = {
     },
     
     getInstance: function( prefix ){
-        if( set[prefix||""] ) return set[prefix||""];
-        return new MsgBus( prefix );
+        return set[prefix||""] || new MsgBus( prefix );
     }
 };
 
@@ -168,6 +176,11 @@ var msgbus= new MsgBus();
 if( typeof module !== 'undefined' && module.exports ){
     module.exports = msgbus;
 }else{
+    var previous = window.MsgBus;
+    MsgBus.prototype.noConflict = function(){
+        window.MsgBus = previous;
+        return msgbus;
+    }
     window.MsgBus = msgbus;
 }
 

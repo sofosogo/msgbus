@@ -2,10 +2,12 @@ $(document).ready(function() {
     
 module("common.MsgBus");
 
-test("listen", 1, function(){
+test("listen", 3, function(){
     var event = "LISTEN";
     MsgBus.listen( "listen", function(data){ same(event, data);} );
     MsgBus.fire( "listen", event );
+    same( MsgBus, MsgBus.getInstance() );
+    same( MsgBus.getInstance("s"), MsgBus.getInstance("s") );
 });
 
 test("remove", 1, function(){
@@ -96,6 +98,12 @@ test("join", 3, function(){
     msgbus.fire("evt1", event + "_3");
     msgbus.fire("evt2", event + "_3");
     msgbus.fire("evt3", event + "_3");
+});
+
+test("noConflict", function(){
+    var msgbus = MsgBus.noConflict();
+    same( MsgBus, void 0 );
+    same( msgbus, msgbus.getInstance() );
 });
 
 });
