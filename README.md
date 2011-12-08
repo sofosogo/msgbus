@@ -32,7 +32,7 @@
 @param data 任意值，可选。如果data是undefined，将返回该信号，否则保存该信号并返回。此时用法和msgbus.fire相同。  
 @param opt  对象，可选。比如 {async: true}。  
     async 布尔值，可选。如值为true，使用setTimeout延迟触发该事件。 
- @return 如果参数只有msg，则返回该信号值，否则为undefined。  
+@return 如果参数只有msg，则返回该信号值，否则为undefined。  
 
 **MsgBus.getInstance( prefix )**   
 @param prefix 字符串。  
@@ -40,10 +40,11 @@
 主要起到隔离不同类型的消息的作用，拥有不同prefix的MsgBus可以监听和触发相同名字的消息，而互不影响。  
 *注意：MsgBus === MsgBus.getInstance()恒成立。*
 
-**MsgBus.opt( key, value )**  
+**MsgBus.global( key, value )**  
 @param key 字符串，必选。全局属性。可选值async。  
     async表示未特别指定时，所有事件是否延迟触发。默认为false。  
-@param value 任意值，可选。如果value是undefined，将返回该属性值，否则设置属性并返回。  
+@param value 任意值，可选。
+@return 如果value是undefined，将返回该属性值，否则设置属性并返回MsgBus。  
 设置MsgBus的全局属性，*注意该操作会影响到所有的MsgBus实例*。  
 
 **Listener**  

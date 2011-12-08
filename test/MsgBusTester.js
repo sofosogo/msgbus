@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(function() {
     
 module("common.MsgBus");
 
@@ -64,12 +64,12 @@ test("option - min_interval", 3, function(){
     var num = 0;
     var event = "min_interval";
     var msgbus = MsgBus.getInstance(event);
-    var listener = msgbus.listen( "listen", function(data){ num++; }, {min_interval: 50} );
+    var listener = msgbus.listen( "listen", function(data){ num++; }, {min_interval: 1000} );
     msgbus.fire( "listen", event );
     equal( num, 1 );
     msgbus.fire( "listen", event );
     equal( num, 1 );
-    setTimeout(function(){ msgbus.fire("listen", event); equal(num, 2); start(); }, 100 );
+    setTimeout(function(){ msgbus.fire("listen", event); equal(num, 2); start(); }, 1000 );
     stop();
 });
 
@@ -84,10 +84,10 @@ test("join", 3, function(){
     var event = "join";
     var msgbus = MsgBus.getInstance(event);
     var join = msgbus.join(["evt1", "evt2", "evt3"], function(data){ same(1, 1)});
-    msgbus.fire("evt1", event);
-    msgbus.fire("evt2", event);
-    msgbus.fire("evt3", event); // once
-    msgbus.fire("evt2", event + "_1"); // once
+    msgbus.fire("evt1", event)
+        .fire("evt2", event)
+        .fire("evt3", event) // once
+        .fire("evt2", event + "_1"); // once
     
     join.clean();
     msgbus.fire("evt1", event + "_2");
@@ -95,9 +95,26 @@ test("join", 3, function(){
     join.put("evt3", event + "_2"); // once
     
     join.remove();
-    msgbus.fire("evt1", event + "_3");
-    msgbus.fire("evt2", event + "_3");
-    msgbus.fire("evt3", event + "_3");
+    msgbus.fire("evt1", event + "_3")
+        .fire("evt2", event + "_3")
+        .fire("evt3", event + "_3");
+});
+
+test("error", 1, function(){
+    var msgbus = MsgBus.getInstance("error");
+    var ln = msgbus.listen("error", function( num ){
+        if( typeof num !== "number" )
+            throw TypeError("The parameter 'num' should be a number.");
+    });
+    msgbus.fire( "error", "1" ); // 0
+    ln.error(function(e, data){
+        window.console && console.log( e );
+        same(1, 1);
+    });
+    msgbus.fire( "error", "1" ); // 1
+    msgbus.fire( "error", 1 ); // 0
+    ln.opt( "error", function(){} );
+    msgbus.fire( "error", "1" ); // 0
 });
 
 test("noConflict", function(){

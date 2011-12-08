@@ -36,19 +36,28 @@ MsgBus.prototype = {
     },
     
     fire: function( msg, data, opt ){
-        var async = opt && opt.async !== void 0 ? opt.async : this.opt("async");
+        var async = opt && opt.async !== void 0 ? opt.async : this.global("async");
         this.prefix && ( msg = this.prefix + msg );
         if( !async ) fire( msg, data );
         else setTimeout( function(){fire(msg, data);}, 0 );
+        return this;
     },
     
     signal: function( msg, data, opt ){
         var msgWithPrefix = this.prefix ? this.prefix + msg : msg;
-        return data !== void 0 ? this.fire(msg, signals[msgWithPrefix]=data, opt) : signals[msgWithPrefix];
+        if( data === void 0 ){
+            return signals[msgWithPrefix];
+        }
+        signals[msgWithPrefix] = data;
+        return this.fire(msg, data, opt);
     },
     
-    opt: function( key, value ){
-        return value !== void 0 ? (opt[key] = value) : opt[key];
+    global: function( key, val ){
+        if( val === void 0 ){
+            return global[key];
+        }
+        global[key] = val;
+        return this;
     },
     
     getInstance: function( prefix ){
@@ -59,7 +68,7 @@ MsgBus.prototype = {
 var id = 0, 
     listeners = {}, 
     signals = {}, 
-    opt = { async: false }, 
+    global = { async: false }, 
     set = {};
     
 function getListeners( msg ){
@@ -96,6 +105,7 @@ Listener.prototype = {
     },
     disable: function(){
         this.enabled = false;
+        return this;
     },
     enable: function(){
         this.enabled = true;
@@ -103,6 +113,18 @@ Listener.prototype = {
             this._delay();
             delete this._delay;
         }
+        return this;
+    },
+    error: function( fn ){
+        this._opt.error = fn;
+        return this;
+    },
+    opt: function( key, val ){
+        if( val === void 0 ){
+            return this._opt[key];
+        }
+        this._opt[key] = val;
+        return this;
     }
 }
 
@@ -135,14 +157,17 @@ Join.prototype = {
     put: function( k, v ){
         this._data[k] = v;
         this._handle();
+        return this;
     },
     clean: function(){
         this._data = {};
+        return this;
     },
     remove: function(){
         for( var i in this._listener ){
             this._listener[i].remove();
         }
+        return this;
     }
 }
 
@@ -158,16 +183,20 @@ function createNotifier( method, obj ){
 }
 
 function fire( msg, data ){
-    var lns = getListeners(msg), now = new Date(), ln;
+    var lns = getListeners(msg), 
+        now = new Date(), 
+        opt, ln;
     for( var i in lns ){
         ln = lns[i];
-        if( ln._opt.min_interval ){
-            if( ln._lastCalled && (now - ln._lastCalled < ln._opt.min_interval) ) continue;
+        opt = ln._opt;
+        if( opt.min_interval ){
+            if( ln._lastCalled && (now - ln._lastCalled < opt.min_interval) ) continue;
             ln._lastCalled = now;
         }
         try{
             ln._handle( data );
         }catch( e ){
+            opt.error && opt.error.call( opt.thisp || ln, e, data );
         }
     }
 }
