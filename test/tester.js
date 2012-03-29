@@ -1,19 +1,19 @@
 $(function() {
     
-module("common.MsgBus");
+module("common.msgbus");
 
 test("listen", 3, function(){
     var event = "LISTEN";
-    MsgBus.listen( "listen", function(data){ same(event, data);} );
-    MsgBus.fire( "listen", event );
-    same( MsgBus, MsgBus.getInstance() );
-    same( MsgBus.getInstance("s"), MsgBus.getInstance("s") );
+    msgbus.listen( "listen", function(data){ deepEqual(event, data);} );
+    msgbus.fire( "listen", event );
+    deepEqual( msgbus, window.msgbus.getInstance() );
+    deepEqual( window.msgbus.getInstance("s"), window.msgbus.getInstance("s") );
 });
 
 test("remove", 1, function(){
     var event = "REMOVE";
-    var msgbus = MsgBus.getInstance(event);
-    var listener = msgbus.listen( "listen", function(data){ same(event, data); } );
+    var msgbus = window.msgbus.getInstance(event);
+    var listener = msgbus.listen( "listen", function(data){ deepEqual(event, data); } );
     msgbus.fire( "listen", event );
     listener.remove();
     msgbus.fire( "listen", event );
@@ -22,7 +22,7 @@ test("remove", 1, function(){
 test("disable && enable", 2, function(){
     var num = 0;
     var event = "DISABLE";
-    var msgbus = MsgBus.getInstance(event);
+    var msgbus = window.msgbus.getInstance(event);
     var listener = msgbus.listen( "listen", function(data){ num++; } );
     msgbus.fire( "listen", event );
     listener.disable();
@@ -35,7 +35,7 @@ test("disable && enable", 2, function(){
 test("disable notify", 5, function(){
     var num = 0;
     var event = "DISABLE NOTIFY";
-    var msgbus = MsgBus.getInstance(event);
+    var msgbus = window.msgbus.getInstance(event);
     var listener = msgbus.listen( "listen", function(data){ num++; }, {enable: "VIEW.SHOW"} );
     equal( num, 0 );
     msgbus.fire( "listen", event );
@@ -52,7 +52,7 @@ test("disable notify", 5, function(){
 test("option - once", 2, function(){
     var num = 0;
     var event = "ONCE";
-    var msgbus = MsgBus.getInstance(event);
+    var msgbus = window.msgbus.getInstance(event);
     var listener = msgbus.listen( "listen", function(data){ num++; }, {once: true} );
     msgbus.fire( "listen", event );
     equal( num, 1 );
@@ -63,7 +63,7 @@ test("option - once", 2, function(){
 test("option - min_interval", 3, function(){
     var num = 0;
     var event = "min_interval";
-    var msgbus = MsgBus.getInstance(event);
+    var msgbus = window.msgbus.getInstance(event);
     var listener = msgbus.listen( "listen", function(data){ num++; }, {min_interval: 1000} );
     msgbus.fire( "listen", event );
     equal( num, 1 );
@@ -75,15 +75,15 @@ test("option - min_interval", 3, function(){
 
 test("signal", 2, function(){
     var event = "SIGNAL";
-    var msgbus = MsgBus.getInstance(event);
-    msgbus.listen( "signal", function(data){ same( event, data ); same( event, msgbus.signal("signal") ); } );
+    var msgbus = window.msgbus.getInstance(event);
+    msgbus.listen( "signal", function(data){ deepEqual( event, data ); deepEqual( event, msgbus.signal("signal") ); } );
     msgbus.signal( "signal", event );
 });
 
 test("join", 3, function(){
     var event = "join";
-    var msgbus = MsgBus.getInstance(event);
-    var join = msgbus.join(["evt1", "evt2", "evt3"], function(data){ same(1, 1)});
+    var msgbus = window.msgbus.getInstance(event);
+    var join = msgbus.join(["evt1", "evt2", "evt3"], function(data){ deepEqual(1, 1)});
     msgbus.fire("evt1", event)
         .fire("evt2", event)
         .fire("evt3", event) // once
@@ -101,7 +101,7 @@ test("join", 3, function(){
 });
 
 test("error", 1, function(){
-    var msgbus = MsgBus.getInstance("error");
+    var msgbus = window.msgbus.getInstance("error");
     var ln = msgbus.listen("error", function( num ){
         if( typeof num !== "number" )
             throw TypeError("The parameter 'num' should be a number.");
@@ -109,7 +109,7 @@ test("error", 1, function(){
     msgbus.fire( "error", "1" ); // 0
     ln.error(function(e, data){
         window.console && console.log( e );
-        same(1, 1);
+        deepEqual(1, 1);
     });
     msgbus.fire( "error", "1" ); // 1
     msgbus.fire( "error", 1 ); // 0
@@ -118,9 +118,9 @@ test("error", 1, function(){
 });
 
 test("noConflict", function(){
-    var msgbus = MsgBus.noConflict();
-    same( MsgBus, void 0 );
-    same( msgbus, msgbus.getInstance() );
+    var msgbus = window.msgbus.noConflict();
+    deepEqual( window.msgbus, void 0 );
+    deepEqual( msgbus, msgbus.getInstance() );
 });
 
 });

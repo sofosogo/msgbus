@@ -1,11 +1,4 @@
-/*
- * MsgBus 
- *
- * Licensed under the MIT:
- * http://www.opensource.org/licenses/mit-license.php
- *
- * Copyright (c) 2011, sofosogo
- */
+/* msgbus | https://github.com/sofosogo/msgbus | MIT Licensed */
 
 (function(){
 
@@ -207,10 +200,10 @@ if( typeof module !== 'undefined' && module.exports ){
 }else{
     var previous = window.MsgBus;
     MsgBus.prototype.noConflict = function(){
-        window.MsgBus = previous;
+        window.msgbus = previous;
         return msgbus;
     }
-    window.MsgBus = msgbus;
+    window.msgbus = msgbus;
 }
 
 })();
